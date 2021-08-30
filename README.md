@@ -1,9 +1,19 @@
 # About myself
-
+****
 ## General
 
 My name is Artem. I am 31 years old. I lived and grew up in Rostov-on-don. I'm married. I graduated from the Don State
 Technical University in 2012 with a degree in Information Systems and Technologies.
+
+### Course Interests
+
+````
+1) First of all im intrestead in relevance of DevOps profession
+2) I am intrestead in large stack of technologies that DevOps uses in their work 
+and how usage of this technologies help to make manufactured software more 
+efficient, stable and agile.
+3) And third... Second was long enough
+````
 
 ### Course Expectations
 
@@ -35,7 +45,7 @@ and my team working on server cluster health support, networking, development an
 ## Soft skills
 
 I suppose my strongest part is to find common ground with team and customers. I am fond of work and could overwork for
-about 4 or 6 hours, good that ive got a wife who remind me to go home. 
+about 4 hours, good that ive got a wife who remind me to go home. 
 
 
 
