@@ -47,12 +47,13 @@ if __name__ == '__main__':
                         default='isp')
     parser.add_argument('-s', '--state', help=' Filter output by TCP state ', type=str, default='')
     args = parser.parse_args()
-    targetip_list = [ip for ip in
-                     [getLastIpaddressesInLine(line) for line in callCommand()
-                      if
-                      (not args.proc or line.find(f'users:(("{args.proc}"') >= 0 or line.find(f'pid={args.proc},') >= 0)
-                      and (not args.state or re.split('\s+', line)[0].find(args.state) >= 0)]
-                     if ip not in exclude_values]
+    lines =  callCommand()
+    if not args.proc:
+        lines = [line for line in lines if line.find(f'users:(("{args.proc}"') >= 0 or line.find(f'pid={args.proc},') >= 0]
+    if not args.state:
+        lines = [line for line in lines if re.split('\s+', line)[0].find(args.state) >= 0]
+
+    targetip_list = [ ip for ip in [ getLastIpaddressesInLine(line) for line in lines] if ip not in exclude_values]
     cnt_list = [[ind, targetip_list.count(ind)] for ind in set(targetip_list)]
     cnt_list.sort(key=takeSecond, reverse=True)
     if 0 < args.lines < len(cnt_list):
