@@ -9,10 +9,6 @@ cmd = 'ss -tap'
 exclude_values = [None, '127.0.0.1', '0.0.0.0']
 
 
-def printHelpMessage():
-    return ''
-
-
 def getLastIpaddressesInLine(string_with_addr):
     ipList = re.findall(r'(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})', string_with_addr)
     if len(ipList):
