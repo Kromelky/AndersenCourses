@@ -7,11 +7,11 @@ List of available attributes can be viewed [here](https://ip-api.com/).
 
 
 ### Usage
-```
-Copy [CheckUsingIps.py](https://github.com/Kromelky/AndersenCourses/blob/main/Homework%2014.09/CheckUsingIps.py)
-Add executable rights (chmod u+x ./CheckUsingIps.py).
-For usag
-```
+
+1. Copy [CheckUsingIps.py](https://github.com/Kromelky/AndersenCourses/blob/main/Homework%2014.09/CheckUsingIps.py)
+2. Add executable rights (chmod u+x ./CheckUsingIps.py).
+3. For other HOWTO info execute with -h key (./CheckUsingIps.py). 
+
 
 
 
