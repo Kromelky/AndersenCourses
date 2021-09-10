@@ -98,7 +98,7 @@ func getTaskStatus(task *Task) {
 	}
 	if data.Content != "" {
 		data.Text = DecodeB64(data.Content)
-		var re = regexp.MustCompile(`<!--STATUS=([^-])`)
+		var re = regexp.MustCompile(`<!--STATUS=([^-]+)`)
 		matches := re.FindStringSubmatch(data.Text)
 		if matches != nil && len(matches) > 1{
 			data.state = matches[1]
@@ -216,7 +216,7 @@ func main() {
 				bot.Send(msg)
 
 				getTaskStatus(TaskByNum)
-				fmt.Println(TaskByNum.content.state)
+				reply = TaskByNum.content.state
 			}			
 		}	
 		msg := tgbotapi.NewMessage(update.Message.Chat.ID, reply)
