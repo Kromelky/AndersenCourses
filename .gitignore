@@ -1,3 +1,5 @@
 /.idea
 /3_Homework 01.10/go.mod
 /3_Homework 01.10/go.sum
+*go.mod
+*go.sum

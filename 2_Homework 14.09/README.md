@@ -12,6 +12,8 @@ List of available attributes can be viewed [here](https://ip-api.com/).
 2. Add executable rights (chmod u+x ./CheckUsingIps.py).
 3. For other HOWTO info execute with -h key (./CheckUsingIps.py). 
 
+<!--STATUS=DONE-->
+
 
 
 
