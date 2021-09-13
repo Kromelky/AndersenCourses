@@ -162,7 +162,10 @@ func readRepo(url string) []Task {
 
 func main() {
 
-	repo_url = "https://api.github.com/repos/Kromelky/AndersenCourses"
+	repo_url = "https://github.com/repos/Kromelky/AndersenCourses"
+	
+	repo_api_url = "https://api.github.com/repos/Kromelky/AndersenCourses"
+	
 
 	bot, err := tgbotapi.NewBotAPI(telegramBotToken)
 	if err != nil {
@@ -191,14 +194,14 @@ func main() {
 		case "git":			
 			reply = repo_url
 		case "tasks":
-			Tasks = readRepo(repo_url + "/contents")
+			Tasks = readRepo(repo_api_url + "/contents")
 			reply = ""
 			for _, tsk := range Tasks {
 				reply+=fmt.Sprintf("/task%v\t-\t%v\n", tsk.TaskNum, tsk.Name)
 			}
 		default:
 			if Tasks == nil{
-				Tasks = readRepo(repo_url + "/contents")
+				Tasks = readRepo(repo_api_url + "/contents")
 			}
 			if s.Contains(cmd, "task"){
 				task_num, err := strconv.Atoi(s.Replace(cmd,"task","",1))
