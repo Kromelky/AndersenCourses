@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -8,10 +9,9 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"regexp"
 	"sort"
 	"strconv"
-	"encoding/base64"
-	"regexp"
 	s "strings"
 
 	tgbotapi "github.com/Syfaro/telegram-bot-api"
@@ -19,31 +19,31 @@ import (
 
 type ReadmeContent struct {
 	Content string
-	Text string 	`json:"-"`
-	state string 	`json:"-"`
+	Text    string `json:"-"`
+	state   string `json:"-"`
 }
 
 type Task struct {
-	TaskNum int			  `json:"-"`
-	Name    string
-	Path    string
-	Url 	string
-	Html_url string		
-	Dirtype string        `json:"type"`
-	content ReadmeContent `json:"-"`
+	TaskNum  int `json:"-"`
+	Name     string
+	Path     string
+	Url      string
+	Html_url string
+	Dirtype  string        `json:"type"`
+	content  ReadmeContent `json:"-"`
 }
 
 var (
 	telegramBotToken string
-	repo_url		 string
-	Tasks     		 []Task
+	repo_url         string
+	repo_api_url     string
+	Tasks            []Task
 )
-
 
 func init() {
 	flag.StringVar(&telegramBotToken, "tkn", "", "Telegram Bot Token")
 	flag.Parse()
-	fmt.Print(telegramBotToken)	
+	fmt.Print(telegramBotToken)
 	if telegramBotToken == "" {
 		log.Print("-telegrambottoken is required")
 		os.Exit(1)
@@ -56,28 +56,27 @@ func remove(s []Task, i int) []Task {
 }
 
 func findTaskbyId(TaskList []Task, num int) *Task {
-	for _, tsk := range TaskList{
-		if tsk.TaskNum == num{
+	for _, tsk := range TaskList {
+		if tsk.TaskNum == num {
 			return &tsk
-		}			
+		}
 	}
 	return nil
 }
 
 func DecodeB64(message string) (retour string) {
-    base64Text := make([]byte, base64.StdEncoding.DecodedLen(len(message)))
-    base64.StdEncoding.Decode(base64Text, []byte(message))
-    fmt.Printf("base64: %s\n", base64Text)
-    return string(base64Text)
+	base64Text := make([]byte, base64.StdEncoding.DecodedLen(len(message)))
+	base64.StdEncoding.Decode(base64Text, []byte(message))
+	fmt.Printf("base64: %s\n", base64Text)
+	return string(base64Text)
 }
 
-func parceREADMEContent(cnt ReadmeContent)  {
+func parceREADMEContent(cnt ReadmeContent) {
 
 }
 
-
-func getTaskStatus(task *Task) {	
-	ReadMeUrl := s.Replace(task.Url,"?ref=main", "" ,1) + "/README.md"
+func getTaskStatus(task *Task) {
+	ReadMeUrl := s.Replace(task.Url, "?ref=main", "", 1) + "/README.md"
 	fmt.Println(ReadMeUrl)
 	res, err := http.Get(ReadMeUrl)
 	if err != nil {
@@ -100,7 +99,7 @@ func getTaskStatus(task *Task) {
 		data.Text = DecodeB64(data.Content)
 		var re = regexp.MustCompile(`<!--STATUS=([^-]+)`)
 		matches := re.FindStringSubmatch(data.Text)
-		if matches != nil && len(matches) > 1{
+		if matches != nil && len(matches) > 1 {
 			data.state = matches[1]
 		}
 	}
@@ -159,13 +158,11 @@ func readRepo(url string) []Task {
 	return data
 }
 
-
 func main() {
 
-	repo_url = "https://github.com/repos/Kromelky/AndersenCourses"
-	
+	repo_url = "https://github.com/Kromelky"
+
 	repo_api_url = "https://api.github.com/repos/Kromelky/AndersenCourses"
-	
 
 	bot, err := tgbotapi.NewBotAPI(telegramBotToken)
 	if err != nil {
@@ -179,7 +176,6 @@ func main() {
 
 	updates, err := bot.GetUpdatesChan(u)
 
-
 	for update := range updates {
 		reply := "Не знаю что сказать"
 		if update.Message == nil {
@@ -190,38 +186,39 @@ func main() {
 		cmd := update.Message.Command()
 		switch cmd {
 		case "start":
-			reply = "Привет " + update.Message.From.UserName + ". Я телеграм-бот c домашними заданиями"
-		case "git":			
+			reply = "Привет " + update.Message.From.UserName + ". Я телеграм-бот c домашними заданиями\nДоступные команды:\n /git\n /tasks"
+
+		case "git":
 			reply = repo_url
 		case "tasks":
 			Tasks = readRepo(repo_api_url + "/contents")
 			reply = ""
 			for _, tsk := range Tasks {
-				reply+=fmt.Sprintf("/task%v\t-\t%v\n", tsk.TaskNum, tsk.Name)
+				reply += fmt.Sprintf("/task%v\t-\t%v\n", tsk.TaskNum, tsk.Name)
 			}
 		default:
-			if Tasks == nil{
+			if Tasks == nil {
 				Tasks = readRepo(repo_api_url + "/contents")
 			}
-			if s.Contains(cmd, "task"){
-				task_num, err := strconv.Atoi(s.Replace(cmd,"task","",1))
+			if s.Contains(cmd, "task") {
+				task_num, err := strconv.Atoi(s.Replace(cmd, "task", "", 1))
 				if err != nil {
 					reply = "Не понимаю номер задания"
 					break
-				} 
+				}
 				var TaskByNum *Task
 				TaskByNum = findTaskbyId(Tasks, task_num)
 				if TaskByNum == nil {
 					reply = "Не могу найти задание с номером " + strconv.Itoa(task_num)
-					break 
-				}		
+					break
+				}
 				msg := tgbotapi.NewMessage(update.Message.Chat.ID, TaskByNum.Html_url)
 				bot.Send(msg)
 
 				getTaskStatus(TaskByNum)
 				reply = TaskByNum.content.state
-			}			
-		}	
+			}
+		}
 		msg := tgbotapi.NewMessage(update.Message.Chat.ID, reply)
 		bot.Send(msg)
 	}
