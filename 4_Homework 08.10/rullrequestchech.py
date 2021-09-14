@@ -16,7 +16,7 @@ if __name__ == '__main__':
                                      usage="Get pull request statistics from github repo")
     parser.add_argument('-r', '--repo', help=' Set repository', type=str, default='https://github.com/trekhleb/javascript-algorithms')
     parser.add_argument('-s', '--state', help=' Set pages state filter', type=str, default='open')
-    parser.add_argument('-p', '--pages', help=' Set pages limit', type=int, default=500)
+    parser.add_argument('-p', '--pages', help=' Set pages limit', type=int, default=50)
 
     args = parser.parse_args()
 
@@ -45,9 +45,8 @@ if __name__ == '__main__':
     data = response.json()
 
     repo = GitHubRepository(data)
-    repo.loadPulls(args.pages)
-    repo.loadLabels(args.pages)
-    repo.LoadContributors(args.pages)
+    repo.LoadData(args.pages)
+    print(repo.getPrintMessage(1))
 
     print('123')
 
