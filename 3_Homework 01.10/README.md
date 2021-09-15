@@ -1,4 +1,4 @@
-# About myself
+# Task bot
 ****
 
 Setup bot token with command line argument -tkn="TOKEN HERE"
