@@ -111,8 +111,9 @@ class GitHubRepository:
         if order == 'name':
             self.contribs.sort(key=lambda x: x.login, reverse=revers)
         elif order == 'count':
-            self.contribs.sort(key=lambda x: min(node.created_at for node in x.pr if node.state == 'open'),
+            self.contribs.sort(key=lambda x: min([now] + [node.created_at for node in x.pr if node.state == "open"]),
                                reverse=revers)
+
         for usr in self.contribs:
             for pr in list(filter(lambda x: (x.state == 'open'), usr.pr)):
                 datediff = str(now - pr.created_at)
