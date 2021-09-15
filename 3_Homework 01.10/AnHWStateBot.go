@@ -13,6 +13,7 @@ import (
 	"sort"
 	"strconv"
 	s "strings"
+	"time"
 
 	tgbotapi "github.com/Syfaro/telegram-bot-api"
 )
@@ -35,6 +36,7 @@ type Task struct {
 
 var (
 	telegramBotToken string
+	githubTokem      string
 	repo_url         string
 	repo_api_url     string
 	Tasks            []Task
@@ -42,11 +44,17 @@ var (
 
 func init() {
 	flag.StringVar(&telegramBotToken, "tkn", "", "Telegram Bot Token")
+	flag.StringVar(&githubTokem, "gtkn", "", "GitHub Auth Token")
 	flag.Parse()
 	fmt.Print(telegramBotToken)
+	fmt.Print(githubTokem)
+
 	if telegramBotToken == "" {
 		log.Print("-telegrambottoken is required")
 		os.Exit(1)
+	}
+	if githubTokem == "" {
+		log.Print("-githubtoken is desirable")
 	}
 }
 
@@ -71,14 +79,13 @@ func DecodeB64(message string) (retour string) {
 	return string(base64Text)
 }
 
-func parceREADMEContent(cnt ReadmeContent) {
-
-}
-
 func getTaskStatus(task *Task) {
 	ReadMeUrl := s.Replace(task.Url, "?ref=main", "", 1) + "/README.md"
 	fmt.Println(ReadMeUrl)
-	res, err := http.Get(ReadMeUrl)
+	c := http.Client{Timeout: time.Duration(2) * time.Second}
+	req, _ := http.NewRequest(http.MethodGet, ReadMeUrl, nil)
+	req.Header.Add("Authorization", fmt.Sprintf("token %v", githubTokem))
+	res, err := c.Do(req)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -107,7 +114,10 @@ func getTaskStatus(task *Task) {
 }
 
 func readRepo(url string) []Task {
-	res, err := http.Get(url)
+	c := http.Client{Timeout: time.Duration(2) * time.Second}
+	req, _ := http.NewRequest(http.MethodGet, url, nil)
+	req.Header.Add("Authorization", fmt.Sprintf("token %v", githubTokem))
+	res, err := c.Do(req)
 	if err != nil {
 		log.Fatal(err)
 	}
