@@ -43,7 +43,6 @@ if __name__ == '__main__':
     if args.token != '':
         headers["Authorization"] = f"token {args.token}"
 
-
     pullRequestApiUrl = getApiPullRequestURLs(args.repo)
 
     response = requests.get(pullRequestApiUrl, headers=headers)
@@ -60,6 +59,8 @@ if __name__ == '__main__':
     repo.LoadData(args.pages, args.state, headers)
     #print(repo.getPrintMessage())
     print(repo.printMainReport(args.sortorder, args.sortdirection))
+    input("Press any key to get next report")
+    print(repo.printCustomReport(args.sortorder, args.sortdirection))
 
 
 

@@ -1,4 +1,8 @@
+import datetime
+
 import requests
+
+from datetime import datetime
 
 
 def removeLastParam(url: str):
@@ -25,8 +29,8 @@ class GitHubRepository:
         self.pulls = []
 
     def LoadData(self, pages, state, headers):
-        #self.loadLabels(pages, state, headers)
-        #self.LoadContributors(pages, state, headers)
+        # self.loadLabels(pages, state, headers)
+        # self.LoadContributors(pages, state, headers)
         self.loadPulls(pages, state, headers)
 
     def loadListByPages(self, url, pages, className, state, headers):
@@ -87,7 +91,7 @@ class GitHubRepository:
     def printMainReport(self, order, revers):
         messages = [f"{'Users'.ljust(30)}{'PrCount'.ljust(20)}"]
         if order == 'name':
-            self.contribs.sort(key=lambda x: x.login, revers=revers)
+            self.contribs.sort(key=lambda x: x.login, reverse=revers)
         elif order == 'count':
             self.contribs.sort(key=lambda x: len(x.pr), reverse=revers)
         labelheader = ''
@@ -101,6 +105,21 @@ class GitHubRepository:
             messages.append(row)
         return "\n".join(messages)
 
+    def printCustomReport(self, order, revers):
+        now = datetime.now()
+        messages = ["Time of unclosed PR", f"{'Users'.ljust(30)}{'Unclosed time'.ljust(20)}"]
+        if order == 'name':
+            self.contribs.sort(key=lambda x: x.login, reverse=revers)
+        elif order == 'count':
+            self.contribs.sort(key=lambda x: min(node.created_at for node in x.pr if node.state == 'open'),
+                               reverse=revers)
+        for usr in self.contribs:
+            for pr in list(filter(lambda x: (x.state == 'open'), usr.pr)):
+                datediff = str(now - pr.created_at)
+                row = f"{pr.user.login.ljust(30)}{datediff[:datediff.rindex('.')].ljust(20)}"
+                messages.append(row)
+        return "\n".join(messages)
+
 
 class GitHubPullRequests:
 
@@ -109,8 +128,9 @@ class GitHubPullRequests:
         self.id = json['id']
         self.number = json['number']
         self.state = json['state']
+        self.created_at = datetime.strptime(json["created_at"], "%Y-%m-%dT%XZ")
         self.labels = []
-        if len(json['labels']) > 0 :
+        if len(json['labels']) > 0:
             for val in json['labels']:
                 ins = True
                 for lab in repo.labels:
