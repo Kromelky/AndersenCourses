@@ -1,8 +1,4 @@
-# About myself
-****
+<!--STATUS=IN PROGRESS-->
 
-
-
-<!--STATUS=PLANING-->
 
 
