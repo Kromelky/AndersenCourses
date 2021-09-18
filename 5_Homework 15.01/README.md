@@ -14,6 +14,7 @@ docker run -d -p 8080:8080 kromelky/andersen
 
 3) Open browser http://{%your vm ip/hostname}:8080/
 
+<!--STATUS=DONE-->
 
 
 
