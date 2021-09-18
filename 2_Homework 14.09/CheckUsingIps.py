@@ -1,16 +1,11 @@
 #!/usr/bin/python3
 import requests
 import re
-import sys
 import argparse
 from subprocess import Popen, PIPE
 
 cmd = 'ss -tap'
 exclude_values = [None, '127.0.0.1', '0.0.0.0']
-
-
-def printHelpMessage():
-    return ''
 
 
 def getLastIpaddressesInLine(string_with_addr):
