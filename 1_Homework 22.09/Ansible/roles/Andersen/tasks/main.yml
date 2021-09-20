@@ -6,6 +6,13 @@
     manage_dir: yes
     key: "{{lookup('file','~/.ssh/{{ssh_key}}.pub')}}"
 
+- name: Install Ssh key to root user Host  
+  authorized_key:
+    user: root
+    state: present
+    manage_dir: yes
+    key: "{{lookup('file','~/.ssh/{{ssh_key}}.pub')}}"
+
 - name: Push default key
   authorized_key:
     user: '{{ ansible_ssh_user }}'
@@ -40,7 +47,6 @@
     path: '~/.bashrc'
     regexp: '^alias python='
     line: 'alias python="/usr/bin/python3.9"'
-  notify: reload bashrc
 
 - name: Creating Project Folder
   file: 
@@ -58,7 +64,7 @@
     force: yes
 
 - import_tasks: ssl.yml
-  when: use_ssl == True
+  when: use_ssl == 'True'
 
 - name: Make run file
   copy:
@@ -94,6 +100,7 @@
   service: 
     name: awesomezoo
     enabled: yes
+    state: restarted
 
 - name: Modify host for subdoman
   lineinfile:

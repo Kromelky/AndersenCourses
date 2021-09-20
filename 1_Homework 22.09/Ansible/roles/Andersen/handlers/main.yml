@@ -12,5 +12,3 @@
       name: sshd
       state: restarted
   
-  - name: reload bashrc
-    command: . .bashrc
