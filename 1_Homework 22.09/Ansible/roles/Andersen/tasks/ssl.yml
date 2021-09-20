@@ -1,0 +1,36 @@
+---
+- name: Gen SSL key
+  openssl_privatekey:
+     path  : "{{source_folder}}/service/cert/key.pem"
+     cipher: aes256
+     passphrase: '{{ pk_passphrase }}'  
+     type: RSA
+     mode: 0644
+     force: yes
+
+- name: Create SSL crl
+  openssl_csr:
+    path: "{{source_folder}}/service/cert/csr.csr"
+    privatekey_path: "{{source_folder}}/service/cert/key.pem"
+    privatekey_passphrase: '{{ pk_passphrase }}'  
+    country_name: RU
+    organization_name: "organization_name"
+    email_address: "email_address"
+    common_name: "common_name"
+    mode: 0644
+    force: yes
+
+- name: Gen SSL cert
+  openssl_certificate:
+    path: "{{source_folder}}/service/cert/cert.pem"
+    privatekey_path: "{{source_folder}}/service/cert/key.pem"
+    privatekey_passphrase: '{{ pk_passphrase }}'
+    csr_path: "{{source_folder}}/service/cert/csr.csr"
+    provider: selfsigned
+    mode: 0644
+    force: yes
+
+- name: Del SSL crl
+  file: 
+    path: "{{source_folder}}/service/cert/csr.csr"
+    state: absent
