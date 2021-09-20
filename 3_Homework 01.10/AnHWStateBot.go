@@ -13,6 +13,7 @@ import (
 	"sort"
 	"strconv"
 	s "strings"
+	"time"
 
 	tgbotapi "github.com/Syfaro/telegram-bot-api"
 )
@@ -35,19 +36,48 @@ type Task struct {
 
 var (
 	telegramBotToken string
+	githubTokem      string
 	repo_url         string
 	repo_api_url     string
 	Tasks            []Task
+	cl               http.Client
 )
 
 func init() {
 	flag.StringVar(&telegramBotToken, "tkn", "", "Telegram Bot Token")
+	flag.StringVar(&githubTokem, "gtkn", "", "GitHub Auth Token")
 	flag.Parse()
 	fmt.Print(telegramBotToken)
+	fmt.Print(githubTokem)
+
 	if telegramBotToken == "" {
 		log.Print("-telegrambottoken is required")
 		os.Exit(1)
 	}
+	if githubTokem == "" {
+		log.Print("-githubtoken is desirable")
+	}
+
+	cl = http.Client{Timeout: time.Duration(2) * time.Second}
+}
+
+func getReq(url string) ([]byte, error) {
+	req, _ := http.NewRequest(http.MethodGet, url, nil)
+	req.Header.Add("Authorization", fmt.Sprintf("token %v", githubTokem))
+	res, err := cl.Do(req)
+	if err != nil {
+		log.Fatal(err)
+	}
+	body, err := ioutil.ReadAll(res.Body)
+	res.Body.Close()
+	if err != nil {
+		log.Fatal(err)
+	}
+	if res.StatusCode != http.StatusOK {
+		log.Fatal("Unexpected status code", res.StatusCode)
+	}
+	return body, err
+
 }
 
 func remove(s []Task, i int) []Task {
@@ -71,25 +101,10 @@ func DecodeB64(message string) (retour string) {
 	return string(base64Text)
 }
 
-func parceREADMEContent(cnt ReadmeContent) {
-
-}
-
 func getTaskStatus(task *Task) {
 	ReadMeUrl := s.Replace(task.Url, "?ref=main", "", 1) + "/README.md"
 	fmt.Println(ReadMeUrl)
-	res, err := http.Get(ReadMeUrl)
-	if err != nil {
-		log.Fatal(err)
-	}
-	body, err := ioutil.ReadAll(res.Body)
-	res.Body.Close()
-	if err != nil {
-		log.Fatal(err)
-	}
-	if res.StatusCode != http.StatusOK {
-		log.Fatal("Unexpected status code", res.StatusCode)
-	}
+	body, err := getReq(ReadMeUrl)
 	data := ReadmeContent{}
 	err = json.Unmarshal(body, &data)
 	if err != nil {
@@ -107,26 +122,13 @@ func getTaskStatus(task *Task) {
 }
 
 func readRepo(url string) []Task {
-	res, err := http.Get(url)
-	if err != nil {
-		log.Fatal(err)
-	}
-	body, err := ioutil.ReadAll(res.Body)
-	res.Body.Close()
-	if err != nil {
-		log.Fatal(err)
-	}
-	if res.StatusCode != http.StatusOK {
-		log.Fatal("Unexpected status code", res.StatusCode)
-	}
+	body, err := getReq(url)
 	data := []Task{}
 	err = json.Unmarshal(body, &data)
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	remidxesList := []int{}
-
 	for idx, tsk := range data {
 		if tsk.Dirtype != "dir" {
 			remidxesList = append(remidxesList, idx)
@@ -141,7 +143,6 @@ func readRepo(url string) []Task {
 				continue
 			}
 			data[idx].TaskNum = i2
-			fmt.Println(tsk.TaskNum)
 		} else {
 			remidxesList = append(remidxesList, idx)
 		}
