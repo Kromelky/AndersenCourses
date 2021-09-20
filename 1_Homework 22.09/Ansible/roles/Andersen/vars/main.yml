@@ -1,2 +1,5 @@
 ---
   source_folder: /opt/FlaskApplication
+  app_port: 80
+  use_ssl: True
+

@@ -1,10 +1,26 @@
---- 
+---
+- name: Install Ssh key to Host  
+  authorized_key:
+    user: "{{ansible_ssh_user}}"
+    state: present
+    manage_dir: yes
+    key: "{{lookup('file','~/.ssh/{{ssh_key}}.pub')}}"
+
+- name: Push default key
+  authorized_key:
+    user: '{{ ansible_ssh_user }}'
+    key: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
+    state: present
+    manage_dir: True
+  ignore_errors: yes
+
 
 - name: Add specified repository
   copy:
     src: sources.list
     dest: /etc/apt/sources.list
     mode: u+rw,g+r,o-rwx
+
 
 - name: InstallIng Git and VirtualEnv
   apt: 
@@ -14,8 +30,17 @@
       - python3-pip 
       - python3-venv  
       - libssl-dev
+      - libffi-dev
+      - build-essential
     state: latest
     install_recommends: yes    
+
+- name: Change to python3
+  lineinfile:
+    path: '~/.bashrc'
+    regexp: '^alias python='
+    line: 'alias python="/usr/bin/python3.9"'
+  notify: reload bashrc
 
 - name: Creating Project Folder
   file: 
@@ -31,30 +56,23 @@
     clone: yes
     dest: '{{source_folder}}/service'
     force: yes
-    
-- name: Copy key
-  copy:
-    src: key.pem 
-    dest: '{{ source_folder }}/service/cert/key.pem'
-    mode: 0644
 
-- name: Copy cert
-  copy:
-    src: cert.pem 
-    dest: '{{ source_folder }}/service/cert/cert.pem'
-    mode: 0644
+- import_tasks: ssl.yml
+  when: use_ssl == True
 
 - name: Make run file
   copy:
     content: |
       #! /bin/sh
-      {{ venv }}/bin/python {{ source_folder }}/service/main.py
+      {{ venv }}/bin/python {{ source_folder }}/service/main.py -p {{ app_port }} -ssl {{ use_ssl }}
     dest: '{{ source_folder }}/service/run.sh'
   
 - name: Make service file
   template:
     src: awesomezoo.j2
     dest: '{{source_folder}}/service/awesomezoo.service'
+  notify:
+    - Restart Rest service
 
 - name: Add executable
   file:
@@ -84,13 +102,6 @@
     line: '{{ ansible_host }} {{ ansible_nodename }}.localhost'    
 
 - import_tasks: iptables.yml 
-
-- name: Push key
-  authorized_key:
-    user: '{{ ansible_ssh_user }}'
-    key: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
-    state: present
-    manage_dir: True
 
 - name: Enable PubkeyAuthentication
   lineinfile:

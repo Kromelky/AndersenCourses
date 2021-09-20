@@ -1,4 +1,11 @@
 ---
+- name: Gen SSHKey Localy
+  hosts: localhost
+  gather_facts: no
+  become: no  
+  roles:
+    - role: GenKey
+
 - name: Deploy Flusk on Debian 10
   hosts: web_servers
 

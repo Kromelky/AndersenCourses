@@ -1,39 +1,45 @@
 ---
 - name: Prepare application venv
   command: 
-    cmd:  python3 -m venv FlaskAppEnv 
+    cmd:  python3 -m venv {{ venv }} 
     chdir: '{{source_folder}}'
 
 - name: upgrade pip  
   command: 
-    cmd: '{{ venv }}/bin/pip install --upgrade pip'
-    chdir: '{{ venv }}/bin'
+    cmd: '{{ venv }}/bin/pip install --upgrade pip'   
   ignore_errors: yes
 
-- name: Install openssl  
-  command: 
-    cmd: '{{ venv }}/bin/pip install pyopenssl'
-    chdir: '{{ venv }}/bin'
-
 - name: Install Flask
-  command: 
-    cmd: '{{ venv }}/bin/pip install Flask'
+  pip: 
+    name: Flask
+    virtualenv: '{{ venv }}'
+    virtualenv_python: python3.9
     chdir: '{{ venv }}/bin'
 
 - name: Install BS4
-  command: 
-    cmd: '{{ venv }}/bin/pip install beautifulsoup4'
+  pip: 
+    name: beautifulsoup4
+    virtualenv: '{{ venv }}'
+    virtualenv_python: python3.9
     chdir: '{{ venv }}/bin'
 
 - name: Install requests
-  command: 
-    cmd: '{{ venv }}/bin/pip install requests'
+  pip: 
+    name: requests
+    virtualenv: '{{ venv }}'
     chdir: '{{ venv }}/bin'
 
 - name: Install requests lxml
-  command: 
-    cmd: '{{ venv }}/bin/pip install lxml'
+  pip: 
+    name: lxml
+    virtualenv: '{{ venv }}'
     chdir: '{{ venv }}/bin'
+
+- name: Install PyOpenSSL out of venv
+  pip: 
+    name:
+        - cryptography
+        - pyOpenSSL
 
 
 
