@@ -1,4 +1,4 @@
-## Application requirements
+## Ansible script for FlaskApplication
 ****
 
 This is ansible playbook file, for deploying Flask application on Debian 10 OS.
@@ -17,9 +17,13 @@ ansible_ssh_pass=%your user pass
 ansible_sudo_pass=%your sudo pass 
 ````
 
+For changing application settings such as protocol, port or default location in Andersen role vars section.
+(/roles/Andersen/vars). 
+
+
 #### Remote server requirements
 
-If your debian 10 using minimal configuration. "sudo" should be installed before you start
+If you're debian 10 using minimal configuration. "sudo" should be installed before you start
 
 ````
 su -
