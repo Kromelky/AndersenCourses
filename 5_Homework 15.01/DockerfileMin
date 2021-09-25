@@ -1,0 +1,25 @@
+# syntax=docker/dockerfile:1
+FROM python:3.9-alpine as build
+
+COPY requirements.txt requirements.txt
+RUN apk update && \
+    apk add gcc libc-dev libxslt-dev mc libxml2-dev && \
+    apk add libxslt && \
+    pip install pyinstaller && \
+    pip install -r requirements.txt && \
+    mkdir /app && \
+    wget -O /app/main.zip --no-check-certificate https://github.com/Kromelky/FlaskApplication/archive/main.zip && \
+    unzip /app/main.zip -d /app -o && \
+    cp -a /app/FlaskApplication-main/. /app/. && \
+    rm -fr /app/FlaskApplication-main && \
+    rm /app/main.zip && \
+    rm -fr /app/curls
+WORKDIR /app
+RUN pyinstaller -F --add-data templates:templates --add-data static:static main.py
+
+from alpine:3.14 as release
+RUN mkdir /app
+COPY --from=build /app/dist/main /app/main
+WORKDIR /app
+EXPOSE 8080
+CMD ./main -p 8080
