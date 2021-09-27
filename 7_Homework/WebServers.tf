@@ -14,16 +14,17 @@ resource "aws_instance" "webserver" {
     vpc_security_group_ids = [aws_security_group.sg_allow_web.id, aws_security_group.sg_allow_ssh.id]
     user_data = <<EOF
 #!/bin/bash
-sudo su
-sudo service sshd restart
+sudo chmod +r ~/.ssh/authorized_keys 
+sudo systemctl restart sshd
 sudo yum -y update
-sudo yum -y install nginx mc
-mv /etc/nginx /etc/nginx-backup
-mkdir /usr/share/nginx/test
-aws s3 cp s3://kromelkyandersen/index.html /usr/share/nginx/test/index.html
-aws s3 cp s3://kromelkyandersen/nginx.conf /etc/nginx/nginx.conf 
-sudo service nginx start
-chkconfig http on
+sudo yum -y install mc
+sudo amazon-linux-extras install nginx1.12
+sudo mv /etc/nginx /etc/nginx-backup
+sudo mkdir /usr/share/nginx/test
+sudo aws s3 cp s3://kromelkyandersen/index.html /usr/share/nginx/test/index.html
+sudo aws s3 cp s3://kromelkyandersen/nginx.conf /etc/nginx/nginx.conf 
+sudo systemctl restart nginx
+sudo chkconfig http on
 EOF
   
   tags = {
