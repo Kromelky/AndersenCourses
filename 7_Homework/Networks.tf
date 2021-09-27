@@ -8,13 +8,18 @@ resource "aws_vpc" "main" {
   }
 }
 
+data "aws_availability_zones" "available" {
+  state = "available"
+}
 
-
+#Adding subnet for each host
 resource "aws_subnet" "public" {
-  cidr_block = var.public_cidr
+  count = var.instance_count
+  cidr_block = cidrsubnet(var.vpc_cidr, 8, count.index)
   vpc_id = aws_vpc.main.id
+  availability_zone = data.aws_availability_zones.available.names[count.index % length(data.aws_availability_zones.available.names)]
   tags = {
-    Name = var.public_cidr
+    Name = cidrsubnet(var.vpc_cidr, 8, count.index)
   }
 }
 
@@ -39,18 +44,18 @@ resource "aws_internet_gateway" "main_gw" {
   }
 }
 
-resource "aws_eip" "gw" {
+resource "aws_eip" "gw" {  
     count = var.instance_count
     instance = aws_instance.webserver[count.index].id
     vpc      = true
-
     tags     = {
-        Name = format("Main Iep %d", count.index + 1 )
+        Name = format("Main eip %d", count.index + 1 )
     }  
 }
 
 resource "aws_route_table_association" "public" {
-  subnet_id      = aws_subnet.public.id
+  count = var.instance_count
+  subnet_id      = aws_subnet.public[count.index].id
   route_table_id = aws_route_table.rt.id  
 }
 
