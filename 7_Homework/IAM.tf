@@ -22,3 +22,9 @@ resource "aws_iam_policy_attachment" "s3-attach" {
   roles = [aws_iam_role.s3_role.name] 
   policy_arn = "arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess"
 }
+
+resource "aws_iam_policy_attachment" "s3-full" {
+  name       = "s3-full"
+  roles = [aws_iam_role.s3_role.name] 
+  policy_arn = "arn:aws:iam::aws:policy/AmazonS3FullAccess"
+}

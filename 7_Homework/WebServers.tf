@@ -1,6 +1,6 @@
 # Build WebServers 
 provider "aws" {
-    region = "eu-central-1"  
+    region = var.aws_region
 }
 
 
@@ -22,7 +22,8 @@ sudo mv /etc/nginx/nginx.conf /etc/nginx/nginx.conf-backup
 sudo mkdir /usr/share/nginx/test
 sudo aws s3 cp s3://kromelkyandersen/index.html /usr/share/nginx/test/index.html
 sudo aws s3 cp s3://kromelkyandersen/nginx.conf /etc/nginx/nginx.conf 
-sudo systemctl restart nginx
+sudo systemctl start nginx
+sudo systemctl enable nginx
 sudo chkconfig http on
 EOF
   

@@ -1,4 +1,11 @@
 
+
+variable "aws_region" {
+    type    = string
+    default = "eu-central-1"
+    description = "Default region"
+}
+
 variable "instance_count" {
     type    = number
     default = 2
