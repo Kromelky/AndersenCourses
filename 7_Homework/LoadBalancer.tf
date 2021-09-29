@@ -11,6 +11,10 @@ resource "aws_lb" "httplb" {
     enabled = true
   }
 
+  lifecycle {
+    create_before_destroy = true
+  }
+
 }
 
 resource "aws_lb_target_group" "web_tg" {

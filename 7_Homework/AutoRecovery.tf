@@ -27,10 +27,10 @@ resource "aws_sns_topic" "nlb-failedhosts" {
   name = "nlb-failedhosts"
 }
 
-# Created only if region with recovery
+
 resource "aws_cloudwatch_metric_alarm" "autorecovery" {
   count               =  var.instance_count
-  alarm_name          = format("Instance state alarm %s", aws_instance.webserver[count.index].tags["Name"])
+  alarm_name          = "Instance state alarm ${aws_instance.webserver[count.index].tags["Name"]}"
   namespace           = "AWS/EC2"
   evaluation_periods  = "2"
   period              = "60"

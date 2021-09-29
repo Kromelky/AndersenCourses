@@ -1,8 +1,4 @@
 # Build WebServers 
-provider "aws" {
-    region = var.aws_region
-}
-
 
 resource "aws_instance" "webserver" {
     count = var.instance_count
@@ -13,22 +9,14 @@ resource "aws_instance" "webserver" {
     associate_public_ip_address = true
     iam_instance_profile = aws_iam_instance_profile.ec3_profile.name
     vpc_security_group_ids = [aws_security_group.sg_allow_web.id, aws_security_group.sg_allow_ssh.id]
-    user_data = <<EOF
-#!/bin/bash
-sudo yum -y update
-sudo yum -y install mc
-sudo amazon-linux-extras install nginx1.12
-sudo mv /etc/nginx/nginx.conf /etc/nginx/nginx.conf-backup
-sudo mkdir /usr/share/nginx/test
-sudo aws s3 cp s3://kromelkyandersen/index.html /usr/share/nginx/test/index.html
-sudo aws s3 cp s3://kromelkyandersen/nginx.conf /etc/nginx/nginx.conf 
-sudo systemctl start nginx
-sudo systemctl enable nginx
-sudo chkconfig http on
-EOF
+    user_data = file("/files/WebServersInit.sh")
   
   tags = {
-      Name = format("Web Server %d", count.index + 1 )
+      Name = "Web Server ${ count.index + 1}"
+  }
+
+  lifecycle {
+    create_before_destroy = true
   }
 }
 

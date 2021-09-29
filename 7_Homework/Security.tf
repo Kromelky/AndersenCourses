@@ -46,7 +46,6 @@ resource "aws_security_group" "sg_allow_web" {
       cidr_blocks      = ["0.0.0.0/0"]
  }
   
-
   tags = {
     Name = "allow_http/https"
   }
