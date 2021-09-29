@@ -2,7 +2,7 @@
 
 resource "aws_instance" "webserver" {
     count = var.instance_count
-    ami = "ami-07df274a488ca9195" # Amazon Linux AMI
+    ami = data.aws_ami.latest_amazon_linux.id # Amazon Linux AMI
     instance_type = "t2.micro"
     key_name = aws_key_pair.generated_key.key_name
     subnet_id  = aws_subnet.public[count.index].id
@@ -17,6 +17,15 @@ resource "aws_instance" "webserver" {
 
   lifecycle {
     create_before_destroy = true
+  }
+}
+
+data "aws_ami" "latest_amazon_linux"{
+  owners = ["amazon"]
+  most_recent = true
+  filter {
+    name = "name"
+    values = ["amzn2-ami-hvm-*-x86_64-gp2"]
   }
 }
 

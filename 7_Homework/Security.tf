@@ -30,12 +30,12 @@ resource "aws_security_group" "sg_allow_web" {
   description = "Allow HTTP inbound traffic"
   vpc_id      = aws_vpc.main.id
 
-  ingress {
+  ingress {  
       description      = "HTTP from VPC"
       from_port        = 80
       to_port          = 80
       protocol         = "tcp"
-      cidr_blocks      = ["0.0.0.0/0"]
+      cidr_blocks      = ["0.0.0.0/0"]    
   }
 
   egress {
