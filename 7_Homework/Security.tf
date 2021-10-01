@@ -47,6 +47,6 @@ resource "aws_security_group" "sg_allow_web" {
  }
   
   tags = {
-    Name = "allow_http/https"
+    Name = "allow_http"
   }
 }

@@ -10,9 +10,9 @@ resource "aws_lb" "httplb" {
     prefix  = "httplb"
     enabled = true
   }
-
+  
   lifecycle {
-    create_before_destroy = true
+    prevent_destroy = true
   }
 
 }
