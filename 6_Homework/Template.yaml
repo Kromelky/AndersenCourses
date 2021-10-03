@@ -419,6 +419,9 @@ Resources:
       Path: "/"
       Roles:
         - Ref: ReadS3BucketRole
+      Tags:
+        - Key: Name
+          Value: AutoCFProfile
 
   ReadS3BucketRole:
     Type: AWS::IAM::Role
@@ -435,11 +438,17 @@ Resources:
                 - ec2.amazonaws.com
             Action:
               - sts:AssumeRole
+      Tags:
+        - Key: Name
+          Value: ReadS3Role
+
 
   EC2InstanceA:
     Type: 'AWS::EC2::Instance'
+
     Properties:
-      IamInstanceProfile: InstanceProfile
+      IamInstanceProfile:
+        Ref: InstanceProfile
       InstanceType:
         Ref: InstanceType
       SecurityGroupIds:
@@ -474,11 +483,11 @@ Resources:
 
 
 
-
   EC2InstanceB:
     Type: 'AWS::EC2::Instance'
     Properties:
-      IamInstanceProfile: InstanceProfile
+      IamInstanceProfile:
+         Ref: InstanceProfile
       InstanceType:
         Ref: InstanceType
       SecurityGroupIds:
@@ -510,6 +519,8 @@ Resources:
           sudo aws s3 cp s3://${BucketName}/nginx.conf /etc/nginx/nginx.conf
           sudo systemctl start nginx
           sudo systemctl enable nginx
+
+
 
   AutoRecoveryA:
     Type: AWS::CloudWatch::Alarm
