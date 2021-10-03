@@ -419,9 +419,6 @@ Resources:
       Path: "/"
       Roles:
         - Ref: ReadS3BucketRole
-      Tags:
-        - Key: Name
-          Value: AutoCFProfile
 
   ReadS3BucketRole:
     Type: AWS::IAM::Role
@@ -483,6 +480,7 @@ Resources:
 
 
 
+
   EC2InstanceB:
     Type: 'AWS::EC2::Instance'
     Properties:
@@ -519,6 +517,7 @@ Resources:
           sudo aws s3 cp s3://${BucketName}/nginx.conf /etc/nginx/nginx.conf
           sudo systemctl start nginx
           sudo systemctl enable nginx
+
 
 
 
@@ -569,7 +568,6 @@ Resources:
   MyLoadBalancer:
     Type: AWS::ElasticLoadBalancing::LoadBalancer
     Properties:
-      AvailabilityZones: !GetAZs
       Subnets:
         - Ref: PrivateSubnetA
         - Ref: PrivateSubnetB
@@ -589,6 +587,10 @@ Resources:
         UnhealthyThreshold: '5'
         Interval: '30'
         Timeout: '5'
+
+      Tags:
+        - Key: Name
+          Value: MainBalancer
 
 Outputs:
   InstanceAId:
