@@ -579,7 +579,7 @@ Resources:
           CidrIp: 0.0.0.0/0
 
   MyLoadBalancer:
-    Type: AWS::ElasticLoadBalancing::LoadBalancer
+    Type: AWS::ElasticLoadBalancing::LoadBalancerType
     Properties:
       Subnets:
         - Ref: PrivateSubnetA
@@ -589,6 +589,8 @@ Resources:
         - Ref: EC2InstanceB
       SecurityGroups:
         - Ref: WebSecurityGroup
+
+      type: application
 
       Listeners:
         - LoadBalancerPort: '80'
