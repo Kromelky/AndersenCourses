@@ -387,6 +387,17 @@ Resources:
         - Key: Name
           Value: MainVPC
 
+  VPCInternetGateway:
+    Type: AWS::EC2::InternetGateway
+
+  AttachGateway:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId:
+        Ref: MainVPC
+      InternetGatewayId:
+        Ref: VPCInternetGateway
+
   PrivateSubnetA:
     Type: AWS::EC2::Subnet
     Properties:
@@ -481,6 +492,7 @@ Resources:
 
 
 
+
   EC2InstanceB:
     Type: 'AWS::EC2::Instance'
     Properties:
@@ -517,6 +529,7 @@ Resources:
           sudo aws s3 cp s3://${BucketName}/nginx.conf /etc/nginx/nginx.conf
           sudo systemctl start nginx
           sudo systemctl enable nginx
+
 
 
 
