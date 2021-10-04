@@ -1,6 +1,12 @@
 AWSTemplateFormatVersion: 2010-09-09
 
 Parameters:
+
+  InstanceName:
+    Description: Name of creating EC2Instances
+    Type: String
+    Default: EC2Instance
+
   KeyName:
     Description: Name of an existing EC2 KeyPair to enable SSH access to the instance
     Type: 'AWS::EC2::KeyPair::KeyName'
@@ -87,6 +93,11 @@ Parameters:
     Description: Please enter the IP range (CIDR notation) for the private subnet in the second Availability Zone
     Type: String
     Default: 10.12.21.0/24
+
+  PublicSubnetCIDR:
+    Description: Please enter the IP range (CIDR notation) for the public subnet
+    Type: String
+    Default: 10.12.22.0/24
 
 Mappings:
   AWSInstanceType2Arch:
@@ -389,6 +400,8 @@ Resources:
 
   VPCInternetGateway:
     Type: AWS::EC2::InternetGateway
+    DependsOn:
+      - MainVPC
 
   AttachGateway:
     Type: AWS::EC2::VPCGatewayAttachment
@@ -397,6 +410,18 @@ Resources:
         Ref: MainVPC
       InternetGatewayId:
         Ref: VPCInternetGateway
+
+  PublicSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId:
+        Ref: MainVPC
+      CidrBlock:
+        Ref: PublicSubnetCIDR
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: Private Subnet (AZ1)
 
   PrivateSubnetA:
     Type: AWS::EC2::Subnet
@@ -423,6 +448,34 @@ Resources:
         Tags:
           - Key: Name
             Value: Private Subnet (AZ2)
+      DependsOn: DefaultRouteTable
+
+  PublicSubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId:
+        Ref: PublicSubnet
+      RouteTableId:
+        Ref: DefaultRouteTable
+    DependsOn:
+       - DefaultRouteTable
+
+  DefaultRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId:
+        Ref: MainVPC
+
+  DefaultRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId:
+        Ref: DefaultRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId:
+        Ref: VPCInternetGateway
+    DependsOn:
+      - VPCInternetGateway
 
   InstanceProfile:
     Type: AWS::IAM::InstanceProfile
@@ -430,6 +483,7 @@ Resources:
       Path: "/"
       Roles:
         - Ref: ReadS3BucketRole
+
 
   ReadS3BucketRole:
     Type: AWS::IAM::Role
@@ -450,6 +504,18 @@ Resources:
         - Key: Name
           Value: ReadS3Role
 
+  ExtraENIA:
+      Type: AWS::EC2::NetworkInterface
+      Properties:
+         SubnetId:
+           Ref: PublicSubnet
+
+  ExtraENIB:
+    Type: AWS::EC2::NetworkInterface
+    Properties:
+      SubnetId:
+        Ref: PublicSubnet
+
 
   EC2InstanceA:
     Type: 'AWS::EC2::Instance'
@@ -465,6 +531,11 @@ Resources:
         Ref: KeyName
       SubnetId:
         Ref: PrivateSubnetA
+      NetworkInterfaces:
+        - NetworkInterfaceId:
+            Ref: ExtraENIA
+          DeviceIndex: '1'
+
       ImageId: !FindInMap
         - AWSRegionArch2AMI
         - !Ref 'AWS::Region'
@@ -481,15 +552,15 @@ Resources:
           #!/bin/bash
           sudo yum -y update
           sudo yum -y install mc nginx
-          sudo amazon-linux-extras install nginx1.12 -y
+          sudo amazon-linux-extras install nginx1.12
           sudo mv /etc/nginx/nginx.conf /etc/nginx/nginx.conf-backup
           sudo mkdir /usr/share/nginx/test
           sudo aws s3 cp s3://kromelkyandersen/index.html /usr/share/nginx/test/index.html
           sudo aws s3 cp s3://kromelkyandersen/nginx.conf /etc/nginx/nginx.conf
           sudo systemctl start nginx
           sudo systemctl enable nginx
-
-
+          sudo service nginx start
+          sudo service nginx enable
 
 
 
@@ -505,7 +576,13 @@ Resources:
       KeyName:
         Ref: KeyName
       SubnetId:
-        Ref: PrivateSubnetA
+        Ref: PrivateSubnetB
+
+      NetworkInterfaces:
+        - NetworkInterfaceId:
+            Ref: ExtraENIB
+          DeviceIndex: '1'
+
       ImageId: !FindInMap
         - AWSRegionArch2AMI
         - !Ref 'AWS::Region'
@@ -522,14 +599,15 @@ Resources:
           #!/bin/bash
           sudo yum -y update
           sudo yum -y install mc nginx
-          sudo amazon-linux-extras install nginx1.12 -y
+          sudo amazon-linux-extras install nginx1.12
           sudo mv /etc/nginx/nginx.conf /etc/nginx/nginx.conf-backup
           sudo mkdir /usr/share/nginx/test
           sudo aws s3 cp s3://${BucketName}/index.html /usr/share/nginx/test/index.html
           sudo aws s3 cp s3://${BucketName}/nginx.conf /etc/nginx/nginx.conf
           sudo systemctl start nginx
           sudo systemctl enable nginx
-
+          sudo service nginx start
+          sudo service nginx enable
 
 
 
@@ -577,44 +655,85 @@ Resources:
           FromPort: '80'
           ToPort: '80'
           CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: '22'
+          ToPort: '22'
+          CidrIp: 0.0.0.0/0
+
+  MyTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Name: MyTargets
+      HealthyThresholdCount: 2
+      Port: 80
+      Protocol: HTTP
+      TargetType: instance
+      Targets:
+        - Id: !Ref EC2InstanceA
+        - Id: !Ref EC2InstanceB
+      VpcId:
+        Ref: MainVPC
 
   MyLoadBalancer:
-    Type: AWS::ElasticLoadBalancing::LoadBalancerType
+    Type: 'AWS::ElasticLoadBalancingV2::LoadBalancer'
     Properties:
       Subnets:
         - Ref: PrivateSubnetA
         - Ref: PrivateSubnetB
-      Instances:
-        - Ref: EC2InstanceA
-        - Ref: EC2InstanceB
       SecurityGroups:
         - Ref: WebSecurityGroup
+      Type: application
+    DependsOn:
+      - MyTargetGroup
+      - EC2InstanceA
+      - EC2InstanceB
 
-      type: application
+  LoadBalancerAlarm:
+    Type: 'AWS::CloudWatch::Alarm'
+    Properties:
+      Namespace: AWS/ApplicationELB
+      Dimensions:
+        - Name: LoadBalancer
+          Value: !GetAtt
+            - MyLoadBalancer
+            - LoadBalancerFullName
+        - Name: TargetGroup
+          Value: !GetAtt
+            - MyTargetGroup
+            - TargetGroupFullName
+      MetricName: UnHealthyHostCount
+      Period: 60
+      Statistic: Average
+      ComparisonOperator: GreaterThanThreshold
+      Threshold: 0
+      EvaluationPeriods: 1
 
-      Listeners:
-        - LoadBalancerPort: '80'
-          InstancePort: '80'
-          Protocol: HTTP
-      HealthCheck:
-        Target: HTTP:80/
-        HealthyThreshold: '3'
-        UnhealthyThreshold: '5'
-        Interval: '30'
-        Timeout: '5'
+  HTTPlistener:
+    Type: "AWS::ElasticLoadBalancingV2::Listener"
+    Properties:
+      LoadBalancerArn: !Ref MyLoadBalancer
+      Port: 80
+      Protocol: "HTTP"
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn:
+            Ref: MyTargetGroup
 
-      Tags:
-        - Key: Name
-          Value: MainBalancer
 
 Outputs:
+
+  BalancerDNS:
+    Description: Accessible ELB Name
+    Value: !GetAtt
+      - MyLoadBalancer
+      - DNSName
+
   InstanceAId:
     Description: InstanceId of the newly created EC2 instanceA
     Value: !Ref EC2InstanceA
   InstanceBId:
     Description: InstanceId of the newly created EC2 instanceB
     Value: !Ref EC2InstanceB
-
 
   AZInstanceA:
     Description: Availability Zone of the newly created EC2 instanceA
@@ -628,13 +747,13 @@ Outputs:
       - EC2InstanceB
       - AvailabilityZone
 
-  PublicDNSInstanceA:
+  PrivateDNSInstanceA:
     Description: Public DNSName of the newly created EC2 instance
     Value: !GetAtt
       - EC2InstanceA
       - PrivateDnsName
 
-  PublicDNSInstanceB:
+  PrivateDNSInstanceB:
     Description: Public DNSName of the newly created EC2 instance
     Value: !GetAtt
       - EC2InstanceB
