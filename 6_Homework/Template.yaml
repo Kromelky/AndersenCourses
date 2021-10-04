@@ -94,10 +94,15 @@ Parameters:
     Type: String
     Default: 10.12.21.0/24
 
-  PublicSubnetCIDR:
+  PublicSubnetACIDR:
     Description: Please enter the IP range (CIDR notation) for the public subnet
     Type: String
     Default: 10.12.22.0/24
+
+  PublicSubnetBCIDR:
+    Description: Please enter the IP range (CIDR notation) for the public subnet
+    Type: String
+    Default: 10.12.23.0/24
 
 Mappings:
   AWSInstanceType2Arch:
@@ -411,18 +416,6 @@ Resources:
       InternetGatewayId:
         Ref: VPCInternetGateway
 
-  PublicSubnet:
-    Type: AWS::EC2::Subnet
-    Properties:
-      VpcId:
-        Ref: MainVPC
-      CidrBlock:
-        Ref: PublicSubnetCIDR
-      MapPublicIpOnLaunch: false
-      Tags:
-        - Key: Name
-          Value: Private Subnet (AZ1)
-
   PrivateSubnetA:
     Type: AWS::EC2::Subnet
     Properties:
@@ -448,17 +441,26 @@ Resources:
         Tags:
           - Key: Name
             Value: Private Subnet (AZ2)
-      DependsOn: DefaultRouteTable
 
-  PublicSubnetRouteTableAssociation:
+  PublicSubnetRouteTableAssociationA:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
       SubnetId:
-        Ref: PublicSubnet
+        Ref: PrivateSubnetA
       RouteTableId:
         Ref: DefaultRouteTable
     DependsOn:
        - DefaultRouteTable
+
+  PublicSubnetRouteTableAssociationB:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId:
+        Ref: PrivateSubnetB
+      RouteTableId:
+        Ref: DefaultRouteTable
+    DependsOn:
+      - DefaultRouteTable
 
   DefaultRouteTable:
     Type: AWS::EC2::RouteTable
@@ -475,7 +477,7 @@ Resources:
       GatewayId:
         Ref: VPCInternetGateway
     DependsOn:
-      - VPCInternetGateway
+      - AttachGateway
 
   InstanceProfile:
     Type: AWS::IAM::InstanceProfile
@@ -504,18 +506,6 @@ Resources:
         - Key: Name
           Value: ReadS3Role
 
-  ExtraENIA:
-      Type: AWS::EC2::NetworkInterface
-      Properties:
-         SubnetId:
-           Ref: PublicSubnet
-
-  ExtraENIB:
-    Type: AWS::EC2::NetworkInterface
-    Properties:
-      SubnetId:
-        Ref: PublicSubnet
-
 
   EC2InstanceA:
     Type: 'AWS::EC2::Instance'
@@ -525,16 +515,13 @@ Resources:
         Ref: InstanceProfile
       InstanceType:
         Ref: InstanceType
-      SecurityGroupIds:
-        - Ref: WebSecurityGroup
       KeyName:
         Ref: KeyName
+      SecurityGroupIds:
+        - Ref: WebSecurityGroup
+        - Ref: SHSecurityGroup
       SubnetId:
         Ref: PrivateSubnetA
-      NetworkInterfaces:
-        - NetworkInterfaceId:
-            Ref: ExtraENIA
-          DeviceIndex: '1'
 
       ImageId: !FindInMap
         - AWSRegionArch2AMI
@@ -563,7 +550,6 @@ Resources:
           sudo service nginx enable
 
 
-
   EC2InstanceB:
     Type: 'AWS::EC2::Instance'
     Properties:
@@ -571,17 +557,13 @@ Resources:
          Ref: InstanceProfile
       InstanceType:
         Ref: InstanceType
-      SecurityGroupIds:
-        - Ref: WebSecurityGroup
       KeyName:
         Ref: KeyName
+      SecurityGroupIds:
+        - Ref: WebSecurityGroup
+        - Ref: SHSecurityGroup
       SubnetId:
         Ref: PrivateSubnetB
-
-      NetworkInterfaces:
-        - NetworkInterfaceId:
-            Ref: ExtraENIB
-          DeviceIndex: '1'
 
       ImageId: !FindInMap
         - AWSRegionArch2AMI
@@ -608,8 +590,6 @@ Resources:
           sudo systemctl enable nginx
           sudo service nginx start
           sudo service nginx enable
-
-
 
 
   AutoRecoveryA:
@@ -655,10 +635,19 @@ Resources:
           FromPort: '80'
           ToPort: '80'
           CidrIp: 0.0.0.0/0
+
+  SSHSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: Enable Http access
+      VpcId:
+        Ref: MainVPC
+      SecurityGroupIngress:
         - IpProtocol: tcp
-          FromPort: '22'
-          ToPort: '22'
+          FromPort: '80'
+          ToPort: '80'
           CidrIp: 0.0.0.0/0
+
 
   MyTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
