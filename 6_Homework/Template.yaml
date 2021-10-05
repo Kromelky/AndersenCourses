@@ -424,7 +424,7 @@ Resources:
       AvailabilityZone: !Select [ 0, !GetAZs  '' ]
       CidrBlock:
         Ref: PrivateSubnetACIDR
-      MapPublicIpOnLaunch: false
+      MapPublicIpOnLaunch: true
       Tags:
         - Key: Name
           Value: Private Subnet (AZ1)
@@ -437,7 +437,7 @@ Resources:
         AvailabilityZone: !Select [ 1, !GetAZs  '' ]
         CidrBlock:
           Ref: PrivateSubnetBCIDR
-        MapPublicIpOnLaunch: false
+        MapPublicIpOnLaunch: true
         Tags:
           - Key: Name
             Value: Private Subnet (AZ2)
@@ -519,7 +519,7 @@ Resources:
         Ref: KeyName
       SecurityGroupIds:
         - Ref: WebSecurityGroup
-        - Ref: SHSecurityGroup
+        - Ref: SSHSecurityGroup
       SubnetId:
         Ref: PrivateSubnetA
 
@@ -561,7 +561,7 @@ Resources:
         Ref: KeyName
       SecurityGroupIds:
         - Ref: WebSecurityGroup
-        - Ref: SHSecurityGroup
+        - Ref: SSHSecurityGroup
       SubnetId:
         Ref: PrivateSubnetB
 
