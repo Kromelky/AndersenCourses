@@ -1,6 +1,6 @@
 # Build WebServers 
 
-resource "aws_instance" "webserver" {
+/*resource "aws_instance" "webserver" {
     count = var.instance_count
     ami = data.aws_ami.latest_amazon_linux.id # Amazon Linux AMI
     instance_type = "t2.micro"    
@@ -18,7 +18,7 @@ resource "aws_instance" "webserver" {
   lifecycle {
     create_before_destroy = true
   }
-}
+}*/
 
 data "aws_ami" "latest_amazon_linux"{
   owners = ["amazon"]

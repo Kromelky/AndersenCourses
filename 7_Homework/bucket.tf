@@ -2,6 +2,13 @@
 resource "aws_s3_bucket" "kromelkylblogsbucket" {
   bucket  = "kromelkylblogsbucket"
   acl    = "private"
+  force_destroy = true
+  lifecycle {
+    prevent_destroy = false
+  }
+  versioning {
+    enabled = true
+  }
 }
 
 resource "aws_s3_bucket_policy" "kromelkylblogsbucketpolicy" {

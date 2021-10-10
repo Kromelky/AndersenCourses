@@ -44,18 +44,17 @@ resource "aws_internet_gateway" "main_gw" {
   }
 }
 
-resource "aws_eip" "gw" {  
+/*resource "aws_eip" "gw" {  
     count = var.instance_count
     instance = aws_instance.webserver[count.index].id
     vpc      = true
     tags     = {
         Name = format("Main eip %d", count.index + 1 )
     }  
-}
+}*/
 
 resource "aws_route_table_association" "public" {
   count = var.instance_count
   subnet_id      = aws_subnet.public[count.index].id
   route_table_id = aws_route_table.rt.id  
 }
-

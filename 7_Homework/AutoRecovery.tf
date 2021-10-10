@@ -11,17 +11,11 @@ resource "aws_cloudwatch_metric_alarm" "nlb_healthyhosts" {
   actions_enabled     = "true"
   alarm_actions       = [aws_sns_topic.nlb-failedhosts.arn]
   dimensions = {
-    TargetGroup  = aws_lb_target_group.web_tg.arn_suffix
-    LoadBalancer = aws_lb.httplb.arn_suffix
+    AutoScalingGroupName = aws_autoscaling_group.web_asg.name 
+    LoadBalancer = aws_elb.httplb.name
   }
 }
 
-resource "aws_lb_target_group" "httptg" {
-  name     = "httptg"
-  port     = 80
-  protocol = "HTTP"
-  vpc_id   = aws_vpc.main.id
-}
 
 resource "aws_sns_topic" "nlb-failedhosts" {
   name = "nlb-failedhosts"
@@ -30,7 +24,7 @@ resource "aws_sns_topic" "nlb-failedhosts" {
 
 resource "aws_cloudwatch_metric_alarm" "autorecovery" {
   count               =  var.instance_count
-  alarm_name          = "Instance state alarm ${aws_instance.webserver[count.index].tags["Name"]}"
+  alarm_name          = "Instance state alarm "
   namespace           = "AWS/EC2"
   evaluation_periods  = "2"
   period              = "60"
@@ -41,6 +35,6 @@ resource "aws_cloudwatch_metric_alarm" "autorecovery" {
   threshold           = "0"
   metric_name         = "StatusCheckFailed_System"
   dimensions = {
-      InstanceId = "${aws_instance.webserver[count.index].id}"
+      AutoScalingGroupName = aws_autoscaling_group.web_asg.name
   }
 }

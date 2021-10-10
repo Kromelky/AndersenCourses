@@ -5,6 +5,7 @@ resource "aws_launch_configuration" "web_config" {
   key_name = aws_key_pair.generated_key.key_name
   associate_public_ip_address = true
   iam_instance_profile = aws_iam_instance_profile.ec3_profile.name
+  security_groups = [aws_security_group.sg_allow_web.id, aws_security_group.sg_allow_ssh.id]
   user_data = file("/files/WebServersInit.sh")
 
   lifecycle {
