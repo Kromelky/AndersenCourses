@@ -1,6 +1,6 @@
 
 resource "aws_elb" "httplb" {
-  name               = "httplb"
+  name_prefix        = "httplb"
   security_groups    = [aws_security_group.sg_allow_web.id]
   subnets            = aws_subnet.public.*.id
   cross_zone_load_balancing   = true

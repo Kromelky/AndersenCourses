@@ -21,11 +21,11 @@ resource "aws_sns_topic" "nlb-failedhosts" {
   name = "nlb-failedhosts"
 }
 
-
+/*
 resource "aws_cloudwatch_metric_alarm" "autorecovery" {
-  count               =  var.instance_count
-  alarm_name          = "Instance state alarm "
-  namespace           = "AWS/EC2"
+  count               =  aws_autoscaling_group.web_asg.min_size
+  alarm_name          = "Instance state alarm"
+  namespace           = "AWS/AutoScaling"
   evaluation_periods  = "2"
   period              = "60"
   alarm_description   = "This metric auto recovers EC2 instances"
@@ -38,3 +38,4 @@ resource "aws_cloudwatch_metric_alarm" "autorecovery" {
       AutoScalingGroupName = aws_autoscaling_group.web_asg.name
   }
 }
+*/

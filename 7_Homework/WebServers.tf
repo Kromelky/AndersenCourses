@@ -29,8 +29,8 @@ data "aws_ami" "latest_amazon_linux"{
   }
 }
 
-resource "aws_iam_instance_profile" "ec3_profile" {
-  name = "ec3_profile"
+resource "aws_iam_instance_profile" "web_profile" {
+  name = "web_profile"
   role = aws_iam_role.s3_role.name
 }
 

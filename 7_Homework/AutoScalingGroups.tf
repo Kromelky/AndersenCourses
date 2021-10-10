@@ -1,5 +1,5 @@
 resource "aws_autoscaling_group" "web_asg" {
-    name                = "web_asg"
+    name                = "web_asg-${aws_launch_configuration.web_config.name}"
     max_size            = "${var.instance_count * 3}"
     min_size            = var.instance_count
     min_elb_capacity    = 2
@@ -16,4 +16,9 @@ resource "aws_autoscaling_group" "web_asg" {
             propagate_at_launch = true
         }    
     ]
+
+    lifecycle {
+        create_before_destroy = true
+    }
+    
 }
